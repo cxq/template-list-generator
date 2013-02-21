@@ -1,0 +1,50 @@
+a{
+	text-decoration: none;
+}
+
+.link{
+	width: 200px;
+	padding: 10px;
+	list-style: none;
+	overflow: hidden;
+	float: left;
+}
+
+.link .name{
+	display: block;
+	text-align: center;
+	background: #EEE;
+	padding: 3px 0 5px;
+	color: #333;
+}
+
+.link:hover .name{
+	background: #CCC;
+}
+
+.link .thumbMask{
+	border: 1px solid #EEE;
+	overflow: hidden;
+	height: 200px;
+	display: block;
+}
+
+.link:hover .thumbMask{
+	border-color: #CCC;
+}
+
+.thumbMask .thumb{
+	width: 100%;
+	display: block;
+}
+
+header{
+	height: 100px;
+	background: #EEE;
+}
+
+#main{
+	padding: 0 20px;
+	margin: 0 auto;
+	overflow: hidden;
+}

@@ -11,37 +11,9 @@ if (system.args.length < 2) {
 	phantom.exit(1);
 }
 
-console.log('Starting template-list-generator on: '+system.args[1]);
-
-page.open(system.args[1], function(status){
-	if(status != 'success') return;
-
-	var links = page.evaluate(function(){
-		var tmpLinks = document.querySelectorAll('a'),
-			links = [];
-
-		for (var i = 0; i < tmpLinks.length; i++) {
-			if(tmpLinks[i].href.length){
-				links.push({
-					href : tmpLinks[i].href,
-					text : tmpLinks[i].innerText
-				});
-			}
-		}
-
-		return links;
-	});
-
-	console.log(links);
-
-	page.close();
-
-	openLinks(links, 0);
-
-	phantom.exit();
-});
-
 function openLinks(links, i){
+
+	console.log('openLinksMethod')
 
 	if(i == links.length){
 		finalize();
@@ -49,7 +21,7 @@ function openLinks(links, i){
 
 	var link = links[i];
 
-	if(link.href === undefined || /\/\//.test(link.href)){
+	/*if(link.href === undefined || /\/\//.test(link.href)){
 		console.log('skip : ' + link.href)
 //		fs.write('phantom/log/log.txt', 'Skip : ' + link.href + '\n', 'a');
 		i++;
@@ -62,14 +34,13 @@ function openLinks(links, i){
 //		fs.write('phantom/log/log.txt', 'Complete Link : ' + link.href + '\n', 'a');
 	}
 
-
 	if(link.href.indexOf(config.url) == -1 || config.url == link.href){
 		console.log('skip : ' + link.href);
 //		fs.write('phantom/log/log.txt', 'Skip : ' + link.href + '\n', 'a');
 		i++;
 		openLinks(links, i);
 		return true;
-	}
+	}*/
 
 	console.log('Opening : ' + link.href);
 	page.open(link.href, function(link, links, completeObject, i){
@@ -82,13 +53,13 @@ function openLinks(links, i){
 				var tmpObj = {
 					"link" : link.href,
 					"text" : link.text,
-					"render" : 'images/link'+i+'.png'
+					"render" : 'screenshots/link'+i+'.png'
 				};
 
 				completeObject.push(tmpObj);
 			}
 
-			page.close();
+			page.release();
 			page = require('webpage').create();
 			i++;
 			openLinks(links, i);
@@ -107,3 +78,35 @@ function finalize(){
 	fs.write('finalObject.json', JSON.stringify(completeObject), 'a');
 	phantom.exit();
 };
+
+
+console.log('Starting template-list-generator on: '+system.args[1]);
+
+page.open(system.args[1], function(status){
+	if(status != 'success'){
+		console.log('Impossible to open page')
+		phantom.exit();
+	}
+
+	var links = page.evaluate(function(){
+		var tmpLinks = document.querySelectorAll('a'),
+			links = [];
+
+		for (var i = 0; i < tmpLinks.length; i++) {
+			if(tmpLinks[i].href.length){
+				links.push({
+					href : tmpLinks[i].href,
+					text : tmpLinks[i].innerText
+				});
+			}
+		}
+
+		return links;
+	});
+
+//	page.close();
+
+	console.log('before openLinks');
+	openLinks(links, 0);
+
+});
