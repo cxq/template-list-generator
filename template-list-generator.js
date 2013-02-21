@@ -3,7 +3,8 @@ var page = require('webpage').create(),
 	fs = require('fs'),
 	completeObject = [],
 	config = {
-		url : system.args[1]
+		url : system.args[1],
+		page : "/template-list.html"
 	};
 
 if (system.args.length < 2) {
@@ -21,7 +22,7 @@ function openLinks(links, i){
 
 	var link = links[i];
 
-	/*if(link.href === undefined || /\/\//.test(link.href)){
+	if(link.href === undefined ){
 		console.log('skip : ' + link.href)
 //		fs.write('phantom/log/log.txt', 'Skip : ' + link.href + '\n', 'a');
 		i++;
@@ -34,7 +35,7 @@ function openLinks(links, i){
 //		fs.write('phantom/log/log.txt', 'Complete Link : ' + link.href + '\n', 'a');
 	}
 
-	if(link.href.indexOf(config.url) == -1 || config.url == link.href){
+	/*if(link.href.indexOf(config.url) == -1 || config.url == link.href){
 		console.log('skip : ' + link.href);
 //		fs.write('phantom/log/log.txt', 'Skip : ' + link.href + '\n', 'a');
 		i++;
@@ -53,6 +54,7 @@ function openLinks(links, i){
 				var tmpObj = {
 					"link" : link.href,
 					"text" : link.text,
+					"cat" : link.cat,
 					"render" : 'screenshots/link'+i+'.png'
 				};
 
@@ -82,31 +84,50 @@ function finalize(){
 
 console.log('Starting template-list-generator on: '+system.args[1]);
 
-page.open(system.args[1], function(status){
+page.open(config.url + config.page, function(status){
 	if(status != 'success'){
 		console.log('Impossible to open page')
 		phantom.exit();
 	}
 
 	var links = page.evaluate(function(){
-		var tmpLinks = document.querySelectorAll('a'),
+		var cat = document.querySelectorAll('div.category'),
+			tmpLinks,
+			catName,
 			links = [];
 
-		for (var i = 0; i < tmpLinks.length; i++) {
-			if(tmpLinks[i].href.length){
-				links.push({
-					href : tmpLinks[i].href,
-					text : tmpLinks[i].innerText
-				});
+		if (cat.length > 0){
+			for (var i = 0; i < cat.length; i++) {
+				catName = cat[i].getAttribute('data-category-name');
+				tmpLinks = cat[i].querySelectorAll('a');
+
+				for (var ii = 0; ii < tmpLinks.length; ii++) {
+					if(tmpLinks[ii].href.length){
+						links.push({
+							cat : catName,
+							href : tmpLinks[ii].href,
+							text : tmpLinks[ii].innerText
+						});
+					}
+				}
 			}
+		}else{
+			tmpLinks = document.querySelectorAll('a');
+
+			for (var i = 0; i < tmpLinks.length; i++) {
+				if(tmpLinks[i].href.length){
+					links.push({
+						href : tmpLinks[i].href,
+						text : tmpLinks[i].innerText
+					});
+				}
+			}
+
 		}
 
 		return links;
 	});
 
-//	page.close();
-
-	console.log('before openLinks');
 	openLinks(links, 0);
 
 });
