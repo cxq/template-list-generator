@@ -4,11 +4,11 @@ var page = require('webpage').create(),
 	completeObject = [],
 	config = {
 		url : system.args[1],
-		page : "/template-list.html"
+		page : "/example.html"
 	};
 
 if (system.args.length < 2) {
-	console.log('Usage: server.js <some port>');
+	console.log('You should specify a start url');
 	phantom.exit(1);
 }
 
@@ -91,7 +91,8 @@ page.open(config.url + config.page, function(status){
 	}
 
 	var links = page.evaluate(function(){
-		var cat = document.querySelectorAll('div.category'),
+		var templateListReference = document.getElementById('templateListReference'),
+			cat = templateListReference.querySelectorAll('div.category'),
 			tmpLinks,
 			catName,
 			links = [];
@@ -112,7 +113,7 @@ page.open(config.url + config.page, function(status){
 				}
 			}
 		}else{
-			tmpLinks = document.querySelectorAll('a');
+			tmpLinks = templateListReference.querySelectorAll('a');
 
 			for (var i = 0; i < tmpLinks.length; i++) {
 				if(tmpLinks[i].href.length){

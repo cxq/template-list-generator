@@ -1,18 +1,44 @@
+#templateList{
+	text-align: center;
+}
+
 a{
 	text-decoration: none;
 }
 
+.category{
+	margin-top: 30px;
+	clear: both;
+}
+
+.category .categoryName{
+	text-align: center;
+	border-top: 1px solid gray;
+}
+
+.category .categoryName span{
+	display: inline-block;
+	padding: 5px;
+	background: white;
+	position: relative;
+	top: -15px;
+}
+
 .link{
 	width: 200px;
-	padding: 10px;
 	list-style: none;
+	display: inline-block;
 	overflow: hidden;
-	float: left;
+	border: 1px solid #EEE;
+	margin: 0 20px 20px 0;
+}
+
+.link:hover{
+	border-color: #CCC;
 }
 
 .link .name{
 	display: block;
-	text-align: center;
 	background: #EEE;
 	padding: 3px 0 5px;
 	color: #333;
@@ -23,14 +49,11 @@ a{
 }
 
 .link .thumbMask{
-	border: 1px solid #EEE;
-	overflow: hidden;
+	overflow-x: hidden;
+	overflow-y: scroll;
+	margin-right: -16px;
 	height: 200px;
 	display: block;
-}
-
-.link:hover .thumbMask{
-	border-color: #CCC;
 }
 
 .thumbMask .thumb{
@@ -45,6 +68,6 @@ header{
 
 #main{
 	padding: 0 20px;
-	margin: 0 auto;
+	margin: 20px auto;
 	overflow: hidden;
 }
