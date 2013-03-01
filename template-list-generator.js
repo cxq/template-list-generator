@@ -23,8 +23,7 @@ function openLinks(links, i){
 	var link = links[i];
 
 	if(link.href === undefined ){
-		console.log('skip : ' + link.href)
-//		fs.write('phantom/log/log.txt', 'Skip : ' + link.href + '\n', 'a');
+		console.log('skip : ' + link.href);
 		i++;
 		openLinks(links, i);
 		return true;
@@ -32,24 +31,18 @@ function openLinks(links, i){
 
 	if(!/http/.test(link.href)){
 		link.href = config.url + link.href;
-//		fs.write('phantom/log/log.txt', 'Complete Link : ' + link.href + '\n', 'a');
 	}
 
-	/*if(link.href.indexOf(config.url) == -1 || config.url == link.href){
-		console.log('skip : ' + link.href);
-//		fs.write('phantom/log/log.txt', 'Skip : ' + link.href + '\n', 'a');
-		i++;
-		openLinks(links, i);
-		return true;
-	}*/
-
-	console.log('Opening : ' + link.href);
+	console.log('Opening : ' + link.href + 'viewportSize : ' + link.viewportSize);
+	page.viewportSize = {
+		width: link.viewportWidth ? link.viewportWidth : 1024,
+		height: 768
+	};
 	page.open(link.href, function(link, links, completeObject, i){
 		return function(status){
 
 			console.log('Open ' + status + ' on ' + link.href);
 			if (status == 'success'){
-				page.viewportSize = { width: 960};
 				page.render('screenshots/link' + i +'.png');
 				var tmpObj = {
 					"link" : link.href,
@@ -81,9 +74,6 @@ function finalize(){
 	phantom.exit();
 };
 
-
-console.log('Starting template-list-generator on: '+system.args[1]);
-
 page.open(config.url + config.page, function(status){
 	if(status != 'success'){
 		console.log('Impossible to open page')
@@ -104,10 +94,17 @@ page.open(config.url + config.page, function(status){
 
 				for (var ii = 0; ii < tmpLinks.length; ii++) {
 					if(tmpLinks[ii].href.length){
+						var viewportWidth;
+						if(tmpLinks[ii].getAttribute('data-viewport-width') && tmpLinks[ii].getAttribute('data-viewport-width').length){
+							viewportWidth = tmpLinks[ii].getAttribute('data-viewport-width');
+						}else if(catName && cat[i].getAttribute('data-viewport-width') && cat[i].getAttribute('data-viewport-width').length){
+							viewportWidth = cat[i].getAttribute('data-viewport-width');
+						}
 						links.push({
 							cat : catName,
 							href : tmpLinks[ii].href,
-							text : tmpLinks[ii].innerText
+							text : tmpLinks[ii].innerText,
+							viewportWidth : viewportWidth
 						});
 					}
 				}
