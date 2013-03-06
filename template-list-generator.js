@@ -4,7 +4,8 @@ var page = require('webpage').create(),
 	completeObject = [],
 	config = {
 		url : system.args[1],
-		page : "/example.html"
+		page : "/example.html",
+		fileName : "generateliste.json"
 	};
 
 if (system.args.length < 2) {
@@ -66,12 +67,52 @@ function openLinks(links, i){
 
 function finalize(){
 	//Log registerObject
-	console.log('Writing : finalObject.json');
-	if(fs.isFile('finalObject.json')){
-		fs.remove('finalObject.json');
+	console.log('Writing : config.fileName');
+	if(fs.isFile(config.fileName)){
+		fs.remove(config.fileName);
 	}
-	fs.write('finalObject.json', JSON.stringify(completeObject), 'a');
+	fs.write(config.fileName, JSON.stringify(completeObject), 'a');
 	phantom.exit();
+};
+
+/**
+ * Need to be execute in evalute function
+ * @param link
+ */
+function getLinkObject(link){
+	if(link.href && link.href.length && link.href != "#"){
+		var viewportWidth,
+			category,
+			categoryName,
+			linkObject = {};
+
+		linkObject.href = link.href;
+		linkObject.text = link.innerText;
+
+		//Set category node
+		if(/category\b/.test(link.parentNode.className)){
+			category = link.parentNode;
+		}
+
+		//Set category name
+		if(category !== undefined && category.getAttribute('data-category-name') && category.getAttribute('data-category-name').length){
+			categoryName = category.getAttribute('data-category-name');
+			linkObject.categoryName = categoryName;
+		}
+
+		//Set viewport width
+		if(link.getAttribute('data-viewport-width') && link.getAttribute('data-viewport-width').length){
+			viewportWidth = link.getAttribute('data-viewport-width');
+			linkObject.viewportWidth = viewportWidth;
+		}else if(categoryName && category.getAttribute('data-viewport-width') && category.getAttribute('data-viewport-width').length){
+			viewportWidth = category.getAttribute('data-viewport-width');
+			linkObject.viewportWidth = viewportWidth;
+		}
+
+		return linkObject;
+	}else{
+		return;
+	}
 };
 
 page.open(config.url + config.page, function(status){

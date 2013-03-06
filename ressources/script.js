@@ -1,7 +1,7 @@
 $(document).ready(function(){
 	var obj = null;
 
-	$.getJSON('finalObject.json', function(data) {
+	$.getJSON('generateliste.json', function(data) {
 		obj = data;
 		var el = $('#templateList');
 
