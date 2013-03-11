@@ -4,7 +4,6 @@ var page = require('webpage').create(),
 	completeObject = [],
 	config = {
 		url : system.args[1],
-		page : "/example.html",
 		fileName : "generateliste.json"
 	};
 
@@ -48,7 +47,8 @@ function openLinks(links, i){
 				var tmpObj = {
 					"link" : link.href,
 					"text" : link.text,
-					"cat" : link.cat,
+					"categoryName" : link.categoryName,
+					"viewportWidth" : link.viewportWidth,
 					"render" : 'screenshots/link'+i+'.png'
 				};
 
@@ -67,7 +67,7 @@ function openLinks(links, i){
 
 function finalize(){
 	//Log registerObject
-	console.log('Writing : config.fileName');
+	console.log('Writing : '+ config.fileName);
 	if(fs.isFile(config.fileName)){
 		fs.remove(config.fileName);
 	}
@@ -115,20 +115,63 @@ function getLinkObject(link){
 	}
 };
 
-page.open(config.url + config.page, function(status){
+page.open(config.url, function(status){
 	if(status != 'success'){
 		console.log('Impossible to open page')
 		phantom.exit();
 	}
 
-	var links = page.evaluate(function(){
-		var templateListReference = document.getElementById('templateListReference'),
-			cat = templateListReference.querySelectorAll('div.category'),
-			tmpLinks,
-			catName,
-			links = [];
+	page.onConsoleMessage = function (msg){
+		console.log(msg);
+	};
 
-		if (cat.length > 0){
+	var linkArray = page.evaluate(function(){
+		var templateListReference = document.getElementById('templateListReference'),
+			links = templateListReference.querySelectorAll('a'),
+			linkArrayOutput = [];
+
+		var getLinkObject = function(link){
+			if(link.href && link.href.length && link.href != "#"){
+				var viewportWidth,
+					category,
+					categoryName,
+					linkObject = {};
+
+				linkObject.href = link.href;
+				linkObject.text = link.innerText;
+
+				//Set category node
+				if(/category\b/.test(link.parentNode.className)){
+					category = link.parentNode;
+				}
+
+				//Set category name
+				if(category !== undefined && category.getAttribute('data-category-name') && category.getAttribute('data-category-name').length){
+					categoryName = category.getAttribute('data-category-name');
+					linkObject.categoryName = categoryName;
+					console.log(linkObject.categoryName)
+				}
+
+				//Set viewport width
+				if(link.getAttribute('data-viewport-width') && link.getAttribute('data-viewport-width').length){
+					viewportWidth = link.getAttribute('data-viewport-width');
+					linkObject.viewportWidth = viewportWidth;
+				}else if(categoryName && category.getAttribute('data-viewport-width') && category.getAttribute('data-viewport-width').length){
+					viewportWidth = category.getAttribute('data-viewport-width');
+					linkObject.viewportWidth = viewportWidth;
+				}
+
+				return linkObject;
+			}else{
+				return;
+			}
+		};
+
+		for (var i = 0; i < links.length; i++) {
+			linkArrayOutput.push(getLinkObject(links[i]))
+		}
+
+		/*if (cat.length > 0){
 			for (var i = 0; i < cat.length; i++) {
 				catName = cat[i].getAttribute('data-category-name');
 				tmpLinks = cat[i].querySelectorAll('a');
@@ -162,11 +205,11 @@ page.open(config.url + config.page, function(status){
 				}
 			}
 
-		}
+		}*/
 
-		return links;
+		return linkArrayOutput;
 	});
 
-	openLinks(links, 0);
+	openLinks(linkArray, 0);
 
 });
