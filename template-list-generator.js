@@ -1,3 +1,4 @@
+console.log('Starting > template-list-generator.js')
 var page = require('webpage').create(),
 	system = require('system'),
 	fs = require('fs'),
@@ -14,8 +15,6 @@ if (system.args.length < 2) {
 
 function openLinks(links, i){
 
-	console.log('openLinksMethod')
-
 	if(i == links.length){
 		finalize();
 	}
@@ -23,7 +22,7 @@ function openLinks(links, i){
 	var link = links[i];
 
 	if(link.href === undefined ){
-		console.log('skip : ' + link.href);
+		console.log('Skip > ' + link.href);
 		i++;
 		openLinks(links, i);
 		return true;
@@ -33,26 +32,22 @@ function openLinks(links, i){
 		link.href = config.url + link.href;
 	}
 
-	console.log('Opening : ' + link.href + 'viewportSize : ' + link.viewportSize);
 	page.viewportSize = {
 		width: link.viewportWidth ? link.viewportWidth : 1024,
 		height: 768
 	};
+
+	console.log('Opening > ' + link.href + ' (viewport: ' + page.viewportSize.width + ' / infinite )');
 	page.open(link.href, function(link, links, completeObject, i){
 		return function(status){
 
-			console.log('Open ' + status + ' on ' + link.href);
+			console.log(status);
 			if (status == 'success'){
+				console.log('Rendering...');
 				page.render('screenshots/link' + i +'.png');
-				var tmpObj = {
-					"link" : link.href,
-					"text" : link.text,
-					"categoryName" : link.categoryName,
-					"viewportWidth" : link.viewportWidth,
-					"render" : 'screenshots/link'+i+'.png'
-				};
+				link.render = 'screenshots/link'+i+'.png';
 
-				completeObject.push(tmpObj);
+				completeObject.push(link);
 			}
 
 			page.release();
@@ -65,9 +60,13 @@ function openLinks(links, i){
 	}(link, links, completeObject, i));
 }
 
+
+/**
+ * Finalize Script
+ */
 function finalize(){
 	//Log registerObject
-	console.log('Writing : '+ config.fileName);
+	console.log('Writing > '+ config.fileName);
 	if(fs.isFile(config.fileName)){
 		fs.remove(config.fileName);
 	}
@@ -75,46 +74,8 @@ function finalize(){
 	phantom.exit();
 };
 
-/**
- * Need to be execute in evalute function
- * @param link
- */
-function getLinkObject(link){
-	if(link.href && link.href.length && link.href != "#"){
-		var viewportWidth,
-			category,
-			categoryName,
-			linkObject = {};
 
-		linkObject.href = link.href;
-		linkObject.text = link.innerText;
-
-		//Set category node
-		if(/category\b/.test(link.parentNode.className)){
-			category = link.parentNode;
-		}
-
-		//Set category name
-		if(category !== undefined && category.getAttribute('data-category-name') && category.getAttribute('data-category-name').length){
-			categoryName = category.getAttribute('data-category-name');
-			linkObject.categoryName = categoryName;
-		}
-
-		//Set viewport width
-		if(link.getAttribute('data-viewport-width') && link.getAttribute('data-viewport-width').length){
-			viewportWidth = link.getAttribute('data-viewport-width');
-			linkObject.viewportWidth = viewportWidth;
-		}else if(categoryName && category.getAttribute('data-viewport-width') && category.getAttribute('data-viewport-width').length){
-			viewportWidth = category.getAttribute('data-viewport-width');
-			linkObject.viewportWidth = viewportWidth;
-		}
-
-		return linkObject;
-	}else{
-		return;
-	}
-};
-
+// Open init page
 page.open(config.url, function(status){
 	if(status != 'success'){
 		console.log('Impossible to open page')
@@ -149,7 +110,6 @@ page.open(config.url, function(status){
 				if(category !== undefined && category.getAttribute('data-category-name') && category.getAttribute('data-category-name').length){
 					categoryName = category.getAttribute('data-category-name');
 					linkObject.categoryName = categoryName;
-					console.log(linkObject.categoryName)
 				}
 
 				//Set viewport width
@@ -170,42 +130,6 @@ page.open(config.url, function(status){
 		for (var i = 0; i < links.length; i++) {
 			linkArrayOutput.push(getLinkObject(links[i]))
 		}
-
-		/*if (cat.length > 0){
-			for (var i = 0; i < cat.length; i++) {
-				catName = cat[i].getAttribute('data-category-name');
-				tmpLinks = cat[i].querySelectorAll('a');
-
-				for (var ii = 0; ii < tmpLinks.length; ii++) {
-					if(tmpLinks[ii].href.length){
-						var viewportWidth;
-						if(tmpLinks[ii].getAttribute('data-viewport-width') && tmpLinks[ii].getAttribute('data-viewport-width').length){
-							viewportWidth = tmpLinks[ii].getAttribute('data-viewport-width');
-						}else if(catName && cat[i].getAttribute('data-viewport-width') && cat[i].getAttribute('data-viewport-width').length){
-							viewportWidth = cat[i].getAttribute('data-viewport-width');
-						}
-						links.push({
-							cat : catName,
-							href : tmpLinks[ii].href,
-							text : tmpLinks[ii].innerText,
-							viewportWidth : viewportWidth
-						});
-					}
-				}
-			}
-		}else{
-			tmpLinks = templateListReference.querySelectorAll('a');
-
-			for (var i = 0; i < tmpLinks.length; i++) {
-				if(tmpLinks[i].href.length){
-					links.push({
-						href : tmpLinks[i].href,
-						text : tmpLinks[i].innerText
-					});
-				}
-			}
-
-		}*/
 
 		return linkArrayOutput;
 	});
